@@ -104,7 +104,7 @@ public class LoginController {
             ShopController shopController = loader.getController();
             shopController.setUserId(userId, userRole);
 
-            Stage stage = setupStage(root, "Моя страница", 1250, 900);
+            Stage stage = setupStage(root, "Моя страница", 1154, 714);
             stage.show();
         } catch (IOException e) {
             AlertManager.showInfoAlert("Ошибка перехода", "Не удалось открыть основное окно.");
