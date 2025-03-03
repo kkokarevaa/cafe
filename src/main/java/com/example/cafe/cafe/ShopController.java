@@ -1,12 +1,15 @@
 package com.example.cafe.cafe;
 
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import javafx.geometry.Pos;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -67,12 +70,9 @@ public class ShopController {
     private List<Ingredient> getIngredientsForDrink(int drinkId, Connection conn) {
         List<Ingredient> ingredients = new ArrayList<>();
         try {
-            String sql = "SELECT i.ingredient_id, i.name, i.price " +
-                    "FROM ingredients i " +
-                    "JOIN drinkingredients di ON i.ingredient_id = di.ingredient_id " +
-                    "WHERE di.drink_id = ?";
+            String sql = "SELECT ingredient_id, name, price " +
+                    "FROM ingredients";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, drinkId);
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
@@ -128,8 +128,51 @@ public class ShopController {
         Button recipeButton = new Button("Рецепт");
         recipeButton.setOnAction(e -> showRecipe(drink.getName(), drink.getRecipe()));
 
-        card.getChildren().addAll(imageView, name, description, price, recipeButton);
+        Button addButton = new Button("Добавить");
+        addButton.setOnAction(e -> openAddToCartModal(drink));
+
+        card.getChildren().addAll(imageView, name, description, price, recipeButton, addButton);
         return card;
+    }
+
+    private void openAddToCartModal(Drink drink) {
+        Stage modalStage = new Stage();
+        modalStage.initModality(Modality.APPLICATION_MODAL);
+        modalStage.setTitle("Добавить в корзину");
+
+        VBox layout = new VBox(10);
+        layout.setAlignment(Pos.CENTER);
+        Label title = new Label("Выберите ингредиенты для " + drink.getName());
+
+        List<CheckBox> ingredientCheckboxes = new ArrayList<>();
+        for (Ingredient ingredient : drink.getIngredients()) {
+            CheckBox checkBox = new CheckBox(ingredient.getName() + " (+" + ingredient.getPrice() + " руб.)");
+            ingredientCheckboxes.add(checkBox);
+        }
+
+        Button addToCartButton = new Button("Добавить в корзину");
+        addToCartButton.setOnAction(e -> {
+            List<Ingredient> selectedIngredients = new ArrayList<>();
+            for (int i = 0; i < ingredientCheckboxes.size(); i++) {
+                if (ingredientCheckboxes.get(i).isSelected()) {
+                    selectedIngredients.add(drink.getIngredients().get(i));
+                }
+            }
+            addToCart(drink, selectedIngredients);
+            modalStage.close();
+        });
+
+        layout.getChildren().add(title);
+        layout.getChildren().addAll(ingredientCheckboxes);
+        layout.getChildren().add(addToCartButton);
+
+        Scene scene = new Scene(layout, 300, 400);
+        modalStage.setScene(scene);
+        modalStage.showAndWait();
+    }
+
+    private void addToCart(Drink drink, List<Ingredient> selectedIngredients) {
+        System.out.println("Добавлено в корзину: " + drink.getName() + " с " + selectedIngredients.size() + " ингредиентами");
     }
 
     private void showRecipe(String name, String recipe) {
