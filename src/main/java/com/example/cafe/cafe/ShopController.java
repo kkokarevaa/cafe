@@ -7,6 +7,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -33,6 +34,8 @@ public class ShopController {
     private List<Drink> drinks;
     private final DatabaseConnection databaseConnection = new DatabaseConnection();
     private ObservableList<ScheduleItem> scheduleItems = FXCollections.observableArrayList();
+
+    private Cart cart = new Cart();
 
     private int userId;
     private String userRole;
@@ -65,6 +68,7 @@ public class ShopController {
 
         settingsButton.setOnAction(e -> openScheduleSettings());
         editButton.setOnAction(e -> openDrinkEditor()); // Set action for editButton
+        cartButton.setOnAction(e -> openCartView());
     }
 
     @FXML
@@ -167,6 +171,7 @@ public class ShopController {
         return card;
     }
 
+
     private void openAddToCartModal(Drink drink) {
         Stage modalStage = new Stage();
         modalStage.initModality(Modality.APPLICATION_MODAL);
@@ -190,7 +195,7 @@ public class ShopController {
                     selectedIngredients.add(drink.getIngredients().get(i));
                 }
             }
-            addToCart(drink, selectedIngredients);
+            cart.addItem(drink, selectedIngredients); // Use the instance
             modalStage.close();
         });
 
@@ -202,6 +207,63 @@ public class ShopController {
         modalStage.setScene(scene);
         modalStage.showAndWait();
     }
+
+    private void openCartView() {
+        Stage cartStage = new Stage();
+        cartStage.initModality(Modality.APPLICATION_MODAL);
+        cartStage.setTitle("Корзина");
+
+        VBox layout = new VBox(10);
+        layout.setAlignment(Pos.CENTER);
+
+        // Create a ScrollPane to contain the items
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setContent(layout);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+        for (Cart.CartItem item : cart.getItems()) {
+            VBox itemLayout = new VBox(5);
+            itemLayout.setStyle("-fx-border-color: #ddd; -fx-padding: 10; -fx-background-color: white; " +
+                    "-fx-border-radius: 5px; -fx-background-radius: 5px;");
+
+            Label drinkName = new Label(item.getDrink().getName());
+            drinkName.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
+            Label ingredientsList = new Label("Ингредиенты:");
+
+            itemLayout.getChildren().addAll(drinkName, ingredientsList);
+
+            for (Ingredient ingredient : item.getIngredients()) {
+                Label ingredientLabel = new Label("- " + ingredient.getName());
+                itemLayout.getChildren().add(ingredientLabel);
+            }
+            layout.getChildren().add(itemLayout);
+        }
+
+        // Create a separate VBox for the button
+        VBox buttonLayout = new VBox(10);
+        buttonLayout.setAlignment(Pos.CENTER);
+
+        Button clearCartButton = new Button("Очистить корзину");
+        clearCartButton.setOnAction(e -> {
+            cart.clear();
+            layout.getChildren().clear();
+        });
+
+        buttonLayout.getChildren().add(clearCartButton);
+
+        // Create a BorderPane to organize the layout
+        BorderPane borderPane = new BorderPane();
+        borderPane.setCenter(scrollPane);
+        borderPane.setBottom(buttonLayout);
+
+        // Set the BorderPane as the root of the scene
+        Scene scene = new Scene(borderPane, 600, 400); // Increased size
+        cartStage.setScene(scene);
+        cartStage.showAndWait();
+    }
+
 
     private void addToCart(Drink drink, List<Ingredient> selectedIngredients) {
         System.out.println("Добавлено в корзину: " + drink.getName() + " с " + selectedIngredients.size() + " ингредиентами");
@@ -385,7 +447,7 @@ public class ShopController {
         Button closeButton = new Button("Закрыть");
         closeButton.setOnAction(e -> editStage.close());
 
-        layout.getChildren().addAll(drinkList, closeButton, addDrinkButton);
+        layout.getChildren().addAll(drinkList, addDrinkButton, closeButton);
         Scene scene = new Scene(layout, 400, 300);
         editStage.setScene(scene);
         editStage.showAndWait();
@@ -406,6 +468,7 @@ public class ShopController {
         TextArea descriptionField = new TextArea(drink.getDescription());
         descriptionField.setWrapText(true);
         TextField photoUrlField = new TextField(drink.getPhotoUrl());
+        TextField priceField = new TextField(String.valueOf(drink.getPrice())); // Add a TextField for price
 
         // Disable photoUrlField if the URL does not start with "http"
         if (!drink.getPhotoUrl().toLowerCase().startsWith("http")) {
@@ -418,13 +481,28 @@ public class ShopController {
             drink.setDescription(descriptionField.getText());
             drink.setPhotoUrl(photoUrlField.getText());
 
+            // Update the price
+            try {
+                double price = Double.parseDouble(priceField.getText());
+                drink.setPrice(price);
+            } catch (NumberFormatException ex) {
+                // Show error notification if the price is not a valid number
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Ошибка");
+                alert.setHeaderText(null);
+                alert.setContentText("Неверный формат цены. Пожалуйста, введите число.");
+                alert.showAndWait();
+                return;
+            }
+
             try (Connection conn = databaseConnection.connect()) {
-                String sql = "UPDATE drinks SET name = ?, description = ?, photo_url = ? WHERE drink_id = ?";
+                String sql = "UPDATE drinks SET name = ?, description = ?, photo_url = ?, price = ? WHERE drink_id = ?";
                 PreparedStatement stmt = conn.prepareStatement(sql);
                 stmt.setString(1, drink.getName());
                 stmt.setString(2, drink.getDescription());
                 stmt.setString(3, drink.getPhotoUrl());
-                stmt.setInt(4, drink.getId());
+                stmt.setDouble(4, drink.getPrice()); // Update the price in the database
+                stmt.setInt(5, drink.getId());
                 stmt.executeUpdate();
 
                 // Show success notification
@@ -449,6 +527,7 @@ public class ShopController {
                 new Label("Название:"), nameField,
                 new Label("Описание:"), descriptionField,
                 new Label("Фото URL:"), photoUrlField,
+                new Label("Цена:"), priceField, // Add the price field to the layout
                 saveButton, cancelButton
         );
 
@@ -456,6 +535,7 @@ public class ShopController {
         modalStage.setScene(scene);
         modalStage.showAndWait();
     }
+
 
     private void deleteDrinkFromDatabase(int drinkId) {
         // Establish a connection to the database

@@ -40,4 +40,8 @@ public class Drink {
     public void setPhotoUrl(String text) {
         this.photoUrl = text;
     }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
 }
