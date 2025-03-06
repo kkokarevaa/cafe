@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1
--- Время создания: Мар 03 2025 г., 20:00
+-- Время создания: Мар 06 2025 г., 18:40
 -- Версия сервера: 10.4.32-MariaDB-log
 -- Версия PHP: 8.2.12
 
@@ -40,7 +40,7 @@ CREATE TABLE `drinks` (
 --
 
 INSERT INTO `drinks` (`drink_id`, `name`, `description`, `photo_url`, `price`) VALUES
-(1, 'Эспрессо', 'Крепкий чёрный кофе', 'coffee4.jpeg', 250.00),
+(1, 'Эспрессо', 'Крепкий чёрный кофе', 'coffee4.jpeg', 200.00),
 (2, 'Латте', 'Эспрессо с паровым молоком', 'coffee2.jpeg', 300.00),
 (3, 'Капучино', 'Эспрессо с вспененным молоком', 'coffee1.jpeg', 350.00);
 
@@ -149,6 +149,32 @@ INSERT INTO `roles` (`role_id`, `role_name`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Структура таблицы `schedule`
+--
+
+CREATE TABLE `schedule` (
+  `id` int(11) NOT NULL,
+  `day_of_week` enum('Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье') NOT NULL,
+  `opening_time` time NOT NULL,
+  `closing_time` time NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Дамп данных таблицы `schedule`
+--
+
+INSERT INTO `schedule` (`id`, `day_of_week`, `opening_time`, `closing_time`) VALUES
+(1, 'Понедельник', '08:00:00', '22:00:00'),
+(2, 'Вторник', '08:00:00', '22:00:00'),
+(3, 'Среда', '08:00:00', '22:00:00'),
+(4, 'Четверг', '08:00:00', '22:00:00'),
+(5, 'Пятница', '08:00:00', '23:00:00'),
+(6, 'Суббота', '09:00:00', '23:00:00'),
+(7, 'Воскресенье', '09:00:00', '22:00:00');
+
+-- --------------------------------------------------------
+
+--
 -- Структура таблицы `users`
 --
 
@@ -211,6 +237,12 @@ ALTER TABLE `roles`
   ADD PRIMARY KEY (`role_id`);
 
 --
+-- Индексы таблицы `schedule`
+--
+ALTER TABLE `schedule`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Индексы таблицы `users`
 --
 ALTER TABLE `users`
@@ -225,7 +257,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT для таблицы `drinks`
 --
 ALTER TABLE `drinks`
-  MODIFY `drink_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `drink_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT для таблицы `ingredients`
@@ -244,6 +276,12 @@ ALTER TABLE `orders`
 --
 ALTER TABLE `roles`
   MODIFY `role_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT для таблицы `schedule`
+--
+ALTER TABLE `schedule`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT для таблицы `users`
