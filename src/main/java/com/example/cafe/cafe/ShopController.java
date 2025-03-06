@@ -25,6 +25,10 @@ public class ShopController {
     private TextField searchField;
     @FXML
     private Button settingsButton;
+    @FXML
+    private Button cartButton;
+    @FXML
+    private Button editButton;
 
     private List<Drink> drinks;
     private final DatabaseConnection databaseConnection = new DatabaseConnection();
@@ -39,13 +43,12 @@ public class ShopController {
 
         if ("Сотрудник".equals(userRole)) {
             settingsButton.setVisible(true);
+            cartButton.setVisible(true);
         } else {
             settingsButton.setVisible(false);
+            cartButton.setVisible(false);
         }
-    }
 
-    @FXML
-    public void initialize() {
         try (Connection conn = databaseConnection.connect()) {
             drinks = getDrinks(conn);
         } catch (Exception e) {
@@ -61,6 +64,12 @@ public class ShopController {
         });
 
         settingsButton.setOnAction(e -> openScheduleSettings());
+        editButton.setOnAction(e -> openDrinkEditor()); // Set action for editButton
+    }
+
+    @FXML
+    public void initialize() {
+
     }
 
     private List<Drink> getDrinks(Connection conn) {
@@ -152,8 +161,9 @@ public class ShopController {
 
         Button addButton = new Button("Добавить");
         addButton.setOnAction(e -> openAddToCartModal(drink));
-
         card.getChildren().addAll(imageView, name, description, price, recipeButton, addButton);
+
+
         return card;
     }
 
@@ -307,7 +317,6 @@ public class ShopController {
         }
     }
 
-
     private List<String> generateTimeOptions() {
         List<String> timeOptions = new ArrayList<>();
         for (int hour = 0; hour < 24; hour++) {
@@ -316,6 +325,258 @@ public class ShopController {
             }
         }
         return timeOptions;
+    }
+
+
+    private void openDrinkEditor() {
+        Stage editStage = new Stage();
+        editStage.initModality(Modality.APPLICATION_MODAL);
+        editStage.setTitle("Редактор напитков");
+
+        VBox layout = new VBox(10);
+        layout.setAlignment(Pos.CENTER);
+
+        ListView<Drink> drinkList = new ListView<>();
+        drinkList.getItems().addAll(drinks);
+
+        drinkList.setCellFactory(param -> new ListCell<Drink>() {
+            @Override
+            protected void updateItem(Drink drink, boolean empty) {
+                super.updateItem(drink, empty);
+                if (empty || drink == null) {
+                    setText(null);
+                } else {
+                    setText(drink.getName());
+                }
+            }
+        });
+
+        // Create a context menu
+        ContextMenu contextMenu = new ContextMenu();
+
+        MenuItem editMenuItem = new MenuItem("Редактировать");
+        editMenuItem.setOnAction(e -> {
+            Drink selectedDrink = drinkList.getSelectionModel().getSelectedItem();
+            if (selectedDrink != null) {
+                openEditDrinkModal(selectedDrink);
+            }
+        });
+        contextMenu.getItems().add(editMenuItem);
+
+        MenuItem deleteMenuItem = new MenuItem("Удалить");
+        deleteMenuItem.setOnAction(e -> {
+            Drink selectedDrink = drinkList.getSelectionModel().getSelectedItem();
+            if (selectedDrink != null) {
+                // Remove the drink from the list
+                drinkList.getItems().remove(selectedDrink);
+
+                // Optionally, delete the drink from the database
+                deleteDrinkFromDatabase(selectedDrink.getId());
+            }
+        });
+        contextMenu.getItems().add(deleteMenuItem);
+
+        // Set the context menu for the ListView
+        drinkList.setContextMenu(contextMenu);
+
+        Button addDrinkButton = new Button("Добавить напиток");
+        addDrinkButton.setOnAction(e -> openAddDrinkModal());
+
+        Button closeButton = new Button("Закрыть");
+        closeButton.setOnAction(e -> editStage.close());
+
+        layout.getChildren().addAll(drinkList, closeButton, addDrinkButton);
+        Scene scene = new Scene(layout, 400, 300);
+        editStage.setScene(scene);
+        editStage.showAndWait();
+    }
+
+
+    private void openEditDrinkModal(Drink drink) {
+        Stage modalStage = new Stage();
+        modalStage.initModality(Modality.APPLICATION_MODAL);
+        modalStage.setTitle("Редактировать напиток");
+        modalStage.setWidth(400);
+        modalStage.setHeight(500);
+
+        VBox layout = new VBox(10);
+        layout.setAlignment(Pos.CENTER);
+
+        TextField nameField = new TextField(drink.getName());
+        TextArea descriptionField = new TextArea(drink.getDescription());
+        descriptionField.setWrapText(true);
+        TextField photoUrlField = new TextField(drink.getPhotoUrl());
+
+        // Disable photoUrlField if the URL does not start with "http"
+        if (!drink.getPhotoUrl().toLowerCase().startsWith("http")) {
+            photoUrlField.setDisable(true);
+        }
+
+        Button saveButton = new Button("Сохранить");
+        saveButton.setOnAction(e -> {
+            drink.setName(nameField.getText());
+            drink.setDescription(descriptionField.getText());
+            drink.setPhotoUrl(photoUrlField.getText());
+
+            try (Connection conn = databaseConnection.connect()) {
+                String sql = "UPDATE drinks SET name = ?, description = ?, photo_url = ? WHERE drink_id = ?";
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                stmt.setString(1, drink.getName());
+                stmt.setString(2, drink.getDescription());
+                stmt.setString(3, drink.getPhotoUrl());
+                stmt.setInt(4, drink.getId());
+                stmt.executeUpdate();
+
+                // Show success notification
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Успех");
+                alert.setHeaderText(null);
+                alert.setContentText("Напиток успешно обновлен!");
+                alert.showAndWait();
+
+                modalStage.close();
+
+                loadCards("");
+            } catch (SQLException ex) {
+                System.err.println("Ошибка при обновлении напитка: " + ex.getMessage());
+            }
+        });
+
+        Button cancelButton = new Button("Отмена");
+        cancelButton.setOnAction(e -> modalStage.close());
+
+        layout.getChildren().addAll(
+                new Label("Название:"), nameField,
+                new Label("Описание:"), descriptionField,
+                new Label("Фото URL:"), photoUrlField,
+                saveButton, cancelButton
+        );
+
+        Scene scene = new Scene(layout, 400, 300);
+        modalStage.setScene(scene);
+        modalStage.showAndWait();
+    }
+
+    private void deleteDrinkFromDatabase(int drinkId) {
+        // Establish a connection to the database
+        try (Connection conn = databaseConnection.connect()) {
+            // Define the SQL query to delete a drink
+            String sql = "DELETE FROM drinks WHERE drink_id = ?";
+
+            // Prepare the statement with the SQL query
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                // Set the drink ID parameter
+                stmt.setInt(1, drinkId);
+
+                // Execute the update
+                stmt.executeUpdate();
+
+                // Refresh the drinks list from the database
+                drinks = getDrinks(conn);
+
+                // Update the UI
+                loadCards("");
+
+                // Show success notification
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Успех");
+                alert.setHeaderText(null);
+                alert.setContentText("Напиток успешно удален!");
+                alert.showAndWait();
+            }
+        } catch (SQLException ex) {
+            // Handle any SQL exceptions
+            System.err.println("Ошибка при удалении напитка: " + ex.getMessage());
+        }
+    }
+
+    private void openAddDrinkModal() {
+        Stage modalStage = new Stage();
+        modalStage.initModality(Modality.APPLICATION_MODAL);
+        modalStage.setTitle("Добавить новый напиток");
+        modalStage.setWidth(400);
+        modalStage.setHeight(500);
+        modalStage.setResizable(false);
+
+        VBox layout = new VBox(10);
+        layout.setAlignment(Pos.CENTER);
+
+        TextField nameField = new TextField();
+        nameField.setPromptText("Введите название");
+        TextArea descriptionField = new TextArea();
+        descriptionField.setPromptText("Введите описание");
+        descriptionField.setWrapText(true);
+        TextField priceField = new TextField();
+        priceField.setPromptText("Введите цену");
+        TextField photoUrlField = new TextField();
+        photoUrlField.setPromptText("Введите URL фото (начинается с http)");
+
+        Button saveButton = new Button("Сохранить");
+        saveButton.setOnAction(e -> {
+            String name = nameField.getText();
+            String description = descriptionField.getText();
+            String photoUrl = photoUrlField.getText();
+            String priceText = priceField.getText();
+
+            if (name.isEmpty() || description.isEmpty() || photoUrl.isEmpty() || priceText.isEmpty() || !photoUrl.startsWith("http")) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Ошибка");
+                alert.setHeaderText(null);
+                alert.setContentText("Пожалуйста, заполните все поля корректно.");
+                alert.showAndWait();
+                return;
+            }
+
+            try {
+                double price = Double.parseDouble(priceText);
+
+                try (Connection conn = databaseConnection.connect()) {
+                    String sql = "INSERT INTO drinks (name, description, photo_url, price) VALUES (?, ?, ?, ?)";
+                    PreparedStatement stmt = conn.prepareStatement(sql);
+                    stmt.setString(1, name);
+                    stmt.setString(2, description);
+                    stmt.setString(3, photoUrl);
+                    stmt.setDouble(4, price);
+                    stmt.executeUpdate();
+
+                    // Show success notification
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Успех");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Новый напиток успешно добавлен!");
+                    alert.showAndWait();
+
+                    modalStage.close();
+
+                    // Refresh the drink list
+                    drinks = getDrinks(conn);
+                    loadCards("");
+                } catch (SQLException ex) {
+                    System.err.println("Ошибка при добавлении нового напитка: " + ex.getMessage());
+                }
+            } catch (NumberFormatException ex) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Ошибка");
+                alert.setHeaderText(null);
+                alert.setContentText("Пожалуйста, введите корректную цену.");
+                alert.showAndWait();
+            }
+        });
+
+        Button cancelButton = new Button("Отмена");
+        cancelButton.setOnAction(e -> modalStage.close());
+
+        layout.getChildren().addAll(
+                new Label("Название:"), nameField,
+                new Label("Описание:"), descriptionField,
+                new Label("Цена:"), priceField,
+                new Label("Фото URL:"), photoUrlField,
+                saveButton, cancelButton
+        );
+
+        Scene scene = new Scene(layout, 400, 300);
+        modalStage.setScene(scene);
+        modalStage.showAndWait();
     }
 
 }

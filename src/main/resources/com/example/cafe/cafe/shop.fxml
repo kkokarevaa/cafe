@@ -15,7 +15,8 @@
     <ScrollPane layoutX="20" layoutY="78.0" prefHeight="618.0" prefWidth="1113.0">
         <FlowPane fx:id="cardsContainer" alignment="CENTER" hgap="15" vgap="15" />
     </ScrollPane>
-   <Button layoutX="1019.0" layoutY="20.0" fx:id="settingsButton" mnemonicParsing="false" prefHeight="42.0" prefWidth="114.0" text="Настройки" />
-   <Button layoutX="889.0" layoutY="20.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="114.0" text="Корзина" />
+   <Button fx:id="settingsButton" layoutX="1019.0" layoutY="20.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="114.0" text="Настройки" />
+   <Button fx:id="cartButton" layoutX="889.0" layoutY="20.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="114.0" text="Корзина" />
+   <Button fx:id="editButton" layoutX="755.0" layoutY="20.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="114.0" text="Редактор" />
 
 </AnchorPane>

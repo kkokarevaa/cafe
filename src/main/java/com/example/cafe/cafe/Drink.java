@@ -28,4 +28,16 @@ public class Drink {
     public double getPrice() { return price; }
     public List<Ingredient> getIngredients() { return ingredients; }
     public String getRecipe() { return recipe; }
+
+    public void setName(String text) {
+        this.name = text;
+    }
+
+    public void setDescription(String text) {
+        this.description = text;
+    }
+
+    public void setPhotoUrl(String text) {
+        this.photoUrl = text;
+    }
 }
