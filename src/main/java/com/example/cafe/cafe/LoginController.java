@@ -5,10 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
@@ -122,7 +119,33 @@ public class LoginController {
         stage.setResizable(false);
         centerStage(stage);
         stage.setTitle(title);
+
+        // Добавляем обработчик закрытия окна
+        stage.setOnCloseRequest(event -> {
+            event.consume(); // Отменяем стандартное закрытие окна
+            showExitConfirmation(stage);
+        });
+
         return stage;
+    }
+
+    // Метод для показа окна подтверждения выхода
+    private void showExitConfirmation(Stage stage) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Подтверждение выхода");
+        alert.setHeaderText("Вы действительно хотите выйти?");
+        alert.setContentText("Выберите действие:");
+
+        ButtonType buttonYes = new ButtonType("ОК");
+        ButtonType buttonNo = new ButtonType("Отмена");
+
+        alert.getButtonTypes().setAll(buttonYes, buttonNo);
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == buttonYes) {
+                stage.close();
+            }
+        });
     }
 
     private void centerStage(Stage stage) {
@@ -142,6 +165,14 @@ public class LoginController {
         Stage stage = new Stage();
         stage.setScene(new Scene(root));
         stage.setTitle(title);
+
+        // Добавляем обработчик закрытия окна регистрации
+        stage.setOnCloseRequest(event -> {
+            event.consume(); // Отменяем стандартное закрытие
+            showExitConfirmation(stage);
+        });
+
         stage.show();
     }
+
 }

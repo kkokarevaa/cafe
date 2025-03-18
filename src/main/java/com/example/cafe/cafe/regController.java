@@ -41,6 +41,9 @@ public class regController {
         login_href.setOnAction(event -> openLoginWindow());
     }
 
+    /**
+     * Обрабатывает процесс регистрации пользователя
+     */
     private void handleRegister() {
         String username = usernameField.getText();
         String password = passwordField.getText();
@@ -52,7 +55,8 @@ public class regController {
             return;
         }
 
-        if (username.length() > 19 || password.length() > 19 || password.length() > 19) {
+        // Проверка длины логина и пароля
+        if (username.length() > 19 || password.length() > 19 || confirmPassword.length() > 19) {
             AlertManager.showWarningAlert("Ошибка", "Длина имени, логина и пароля не должна превышать 19 символов.");
             return;
         }
@@ -75,7 +79,7 @@ public class regController {
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, username);
                 stmt.setString(2, password);
-                stmt.setInt(3, 1);
+                stmt.setInt(3, 1); // Устанавливаем стандартную роль
                 stmt.executeUpdate();
                 AlertManager.showInfoAlert("Успешная регистрация", "Добро пожаловать!");
 
@@ -90,7 +94,11 @@ public class regController {
         }
     }
 
-    // Метод для проверки, существует ли пользователь с таким логином
+    /**
+     * Проверяет, существует ли пользователь с таким логином
+     * @param username логин пользователя
+     * @return true если пользователь уже существует, false если нет
+     */
     private boolean isUsernameTaken(String username) {
         String query = "SELECT username FROM Users WHERE username = ?";
         try (Connection conn = databaseConnection.connect();
@@ -105,7 +113,31 @@ public class regController {
         }
     }
 
-    // Метод для открытия окна логина
+    /**
+     * Отображает диалоговое окно подтверждения выхода
+     * @param stage Текущее окно
+     */
+    private void showExitConfirmation(Stage stage) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Подтверждение выхода");
+        alert.setHeaderText("Вы действительно хотите выйти?");
+        alert.setContentText("Выберите действие:");
+
+        ButtonType buttonYes = new ButtonType("ОК");
+        ButtonType buttonNo = new ButtonType("Отмена");
+
+        alert.getButtonTypes().setAll(buttonYes, buttonNo);
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == buttonYes) {
+                stage.close();
+            }
+        });
+    }
+
+    /**
+     * Метод для открытия окна логина
+     */
     private void openLoginWindow() {
         ((Stage) registerButton.getScene().getWindow()).close();
 
@@ -115,6 +147,13 @@ public class regController {
             Stage loginStage = new Stage();
             loginStage.setScene(new Scene(root));
             loginStage.setTitle("Вход");
+
+            // Добавляем обработчик закрытия окна
+            loginStage.setOnCloseRequest(event -> {
+                event.consume(); // Отменяем стандартное закрытие
+                showExitConfirmation(loginStage);
+            });
+
             loginStage.show();
         } catch (IOException e) {
             e.printStackTrace();

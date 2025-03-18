@@ -2,15 +2,28 @@ package com.example.cafe.cafe;
 
 import java.util.List;
 
+/**
+ * Класс, представляющий напиток в кафе.
+ */
 public class Drink {
-    private int id;
-    private String name;
-    private String description;
-    private String photoUrl;
-    private double price;
-    private List<Ingredient> ingredients;
-    private String recipe;
+    private int id; // Уникальный идентификатор напитка
+    private String name; // Название напитка
+    private String description; // Описание напитка
+    private String photoUrl; // URL изображения напитка
+    private double price; // Цена напитка
+    private List<Ingredient> ingredients; // Список ингредиентов напитка
+    private String recipe; // Рецепт приготовления напитка
 
+    /**
+     * Конструктор для создания нового объекта Drink.
+     * @param id Уникальный идентификатор напитка
+     * @param name Название напитка
+     * @param description Описание напитка
+     * @param photoUrl URL изображения напитка
+     * @param price Цена напитка
+     * @param ingredients Список ингредиентов
+     * @param recipe Рецепт приготовления
+     */
     public Drink(int id, String name, String description, String photoUrl, double price, List<Ingredient> ingredients, String recipe) {
         this.id = id;
         this.name = name;
@@ -21,6 +34,7 @@ public class Drink {
         this.recipe = recipe;
     }
 
+    // Геттеры
     public int getId() { return id; }
     public String getName() { return name; }
     public String getDescription() { return description; }
@@ -29,6 +43,7 @@ public class Drink {
     public List<Ingredient> getIngredients() { return ingredients; }
     public String getRecipe() { return recipe; }
 
+    // Сеттеры
     public void setName(String text) {
         this.name = text;
     }

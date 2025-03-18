@@ -9,29 +9,47 @@ import java.util.Optional;
 
 public class AlertManager {
 
+    /**
+     * Отображает информационное уведомление.
+     */
     public static void showInfoAlert(String title, String content) {
         showAlert(AlertType.INFORMATION, title, content);
     }
 
+    /**
+     * Отображает предупреждающее уведомление.
+     */
     public static void showWarningAlert(String title, String content) {
         showAlert(AlertType.WARNING, title, content);
     }
 
+    /**
+     * Отображает уведомление об ошибке.
+     */
     public static void showErrorAlert(String title, String content) {
         showAlert(AlertType.ERROR, title, content);
     }
 
+    /**
+     * Отображает диалог подтверждения и возвращает результат выбора пользователя.
+     */
     public static boolean showConfirmationAlert(String title, String content) {
         Alert alert = createAlert(AlertType.CONFIRMATION, content);
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == ButtonType.OK;
     }
 
+    /**
+     * Универсальный метод для отображения уведомления.
+     */
     private static void showAlert(AlertType alertType, String title, String content) {
         Alert alert = createAlert(alertType, content);
         alert.showAndWait();
     }
 
+    /**
+     * Создаёт диалоговое окно с заданным типом и контентом, а также применяет стили.
+     */
     private static Alert createAlert(AlertType alertType, String content) {
         Alert alert = new Alert(alertType);
         alert.setHeaderText(null); // Убираем стандартный заголовок

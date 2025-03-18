@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1
--- Время создания: Мар 06 2025 г., 18:40
+-- Время создания: Мар 18 2025 г., 17:17
 -- Версия сервера: 10.4.32-MariaDB-log
 -- Версия PHP: 8.2.12
 
@@ -40,7 +40,7 @@ CREATE TABLE `drinks` (
 --
 
 INSERT INTO `drinks` (`drink_id`, `name`, `description`, `photo_url`, `price`) VALUES
-(1, 'Эспрессо', 'Крепкий чёрный кофе', 'coffee4.jpeg', 200.00),
+(1, 'Эспрессо', 'Крепкий чёрный кофе', 'coffee4.jpeg', 250.00),
 (2, 'Латте', 'Эспрессо с паровым молоком', 'coffee2.jpeg', 300.00),
 (3, 'Капучино', 'Эспрессо с вспененным молоком', 'coffee1.jpeg', 350.00);
 
@@ -84,7 +84,10 @@ CREATE TABLE `orderitems` (
 INSERT INTO `orderitems` (`order_id`, `drink_id`, `quantity`) VALUES
 (1, 1, 2),
 (2, 2, 1),
-(2, 3, 1);
+(2, 3, 1),
+(3, 1, 1),
+(4, 2, 1),
+(4, 3, 1);
 
 -- --------------------------------------------------------
 
@@ -105,7 +108,9 @@ CREATE TABLE `orders` (
 
 INSERT INTO `orders` (`order_id`, `user_id`, `order_date`, `total_price`) VALUES
 (1, 1, '2025-02-19 14:34:52', 600.00),
-(2, 2, '2025-02-19 14:34:52', 700.00);
+(2, 2, '2025-02-19 14:34:52', 700.00),
+(3, 2, '2025-03-15 21:47:59', 300.00),
+(4, 2, '2025-03-15 21:54:33', 730.00);
 
 -- --------------------------------------------------------
 
@@ -257,7 +262,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT для таблицы `drinks`
 --
 ALTER TABLE `drinks`
-  MODIFY `drink_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `drink_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT для таблицы `ingredients`
@@ -269,7 +274,7 @@ ALTER TABLE `ingredients`
 -- AUTO_INCREMENT для таблицы `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT для таблицы `roles`
