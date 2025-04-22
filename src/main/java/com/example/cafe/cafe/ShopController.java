@@ -1,5 +1,6 @@
-package com.example.cafe.cafe;
 
+package com.example.cafe.cafe;
+//ctrl + A
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -51,9 +52,11 @@ public class ShopController {
         if ("Сотрудник".equals(userRole)) {
             settingsButton.setVisible(true);
             cartButton.setVisible(true);
+            editButton.setVisible(true); // Добавлена кнопка "редактор"
         } else {
             settingsButton.setVisible(false);
             cartButton.setVisible(false);
+            editButton.setVisible(false); // Добавлена кнопка "редактор"
         }
 
         try (Connection conn = databaseConnection.connect()) {
